@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 export MAKEFLAGS="-j$(nproc)"
 
 # WITH_UPX=1
@@ -11,7 +11,7 @@ if [ -x "$(which apt 2>/dev/null)" ]
     then
         apt update && apt install -y python3-pip patchelf \
             autoconf git cmake upx-ucl libx11-dev xutils-dev libxmuu-dev \
-            build-essential clang pkg-config
+            build-essential clang pkg-config gettext
 fi
 pip install staticx
 
@@ -33,9 +33,9 @@ mkdir release
 pushd build
 
 # download xorg-xhost
-git clone https://github.com/freedesktop/xorg-xhost.git
-xorg_xhost_version="$(cd xorg-xhost && git describe --long --tags|sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g;s|xhost.||g')"
-mv xorg-xhost "xorg-xhost-${xorg_xhost_version}"
+git clone https://gitlab.freedesktop.org/xorg/app/xhost.git
+xorg_xhost_version="$(cd xhost && git describe --long --tags|sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g;s|xhost.||g')"
+mv xhost "xorg-xhost-${xorg_xhost_version}"
 echo "= downloading xorg-xhost v${xorg_xhost_version}"
 
 echo "= building xorg-xhost"
