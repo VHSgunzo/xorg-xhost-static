@@ -19,7 +19,7 @@ jobs:
 
       - name: Build
         run: |
-            sudo bash -c "${{ github.workspace }}/build.sh"
+            docker run --rm -it --volume="${{ github.workspace }}:/root:rw" alpine:latest /root/build-alpine.sh
 
       - name: Release
         uses: softprops/action-gh-release@v1

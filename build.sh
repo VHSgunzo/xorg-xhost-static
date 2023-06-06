@@ -67,4 +67,4 @@ if [ "$NO_CLEANUP" != 1 ]
         rm -rf release build
 fi
 
-echo "= xorg-xhost v${xorg-xhost_version} done"
+echo "= xorg-xhost v${xorg_xhost_version} done"
