@@ -97,7 +97,7 @@ ALPINE_DEPS="
   keyutils \
   libarchive-static libcaca-static libc-dev libcap-static libcap-ng-static libcurl libelf-static libffi-dev libssh-dev libtasn1-dev libtool libtpms libtpms-dev linux-headers linux-tools lvm2-dev lvm2-static lz4 lz4-dev lz4-libs lz4-static \
   make mariadb-static mesa mesa-dev mesa-gbm meson mlocate mold moreutils musl musl-dev musl-fts musl-obstack-dev musl-utils \
-  nano nasm ncurses ncurses-static nettle-static nghttp2-static ninja-build \
+  nano nasm ncurses ncurses-static nettle-static nghttp2-static ninja-build nss nss-tools nsss\
   openssl openssl-dev openssl-libs-static \
   patchelf pcre2 perl perl-xml-parser pkgconf pkgconfig popt-dev popt-static procps protobuf protobuf-c protobuf-c-compiler protobuf-dev python3 \
   readline readline-dev readline-static rsync \
@@ -108,7 +108,7 @@ ALPINE_DEPS="
   yaml yaml-dev yaml-static \
   zig zlib zlib-dev zlib-static zstd zstd-static"
 #https://wiki.alpinelinux.org/wiki/Alpine_Linux_in_a_chroot  
-curl -qfsSL "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic//"$(curl -qfsSL "https://gitlab.alpinelinux.org/api/v4/projects/5/repository/tags" | jq -r '.[0].name' | tr -d '[:space:]')"/aarch64/apk.static" -o "./apk.static"
+curl -qfsSL "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic//"$(curl -qfsSL "https://gitlab.alpinelinux.org/api/v4/projects/5/repository/tags" | jq -r '.[0].name' | tr -d '[:space:]')"/$(uname -m)/apk.static" -o "./apk.static"
 chmod +x "./apk.static"
 sudo "./apk.static" -X "https://dl-cdn.alpinelinux.org/alpine/edge/main" -U --allow-untrusted -p "${ALPINE_CHROOT}" --initdb add "alpine-base"
 sudo mount -o bind "/dev" "${ALPINE_CHROOT}/dev"
@@ -121,6 +121,14 @@ echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" | sudo tee -a "${ALP
 echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" | sudo tee -a "${ALPINE_CHROOT}/etc/apk/repositories"
 sudo chroot "${ALPINE_CHROOT}" apk update && apk upgrade --no-interactive 2>/dev/null
 echo "$ALPINE_DEPS" | xargs sudo chroot "${ALPINE_CHROOT}" apk add --latest --upgrade --no-interactive
+#Rust
+sudo chroot "${ALPINE_CHROOT}" bash -c '
+ #https://github.com/rust-lang/rustup/issues/3428
+ pushd "$(mktemp -d)" >/dev/null 2>&1
+ curl -qfsSL "https://static.rust-lang.org/rustup/dist/$(uname -m)-unknown-linux-musl/rustup-init" -o "/usr/bin/rustup-init"
+ #export RUSTUP_HOME="/root/.rustup"
+ chmod +x "/usr/bin/rustup-init" ; rustup-init -y
+ source "$HOME/.cargo/env" ; cargo version'
 popd >/dev/null 2>&1
 ##-------------------------------------------------------#
 
@@ -131,14 +139,14 @@ popd >/dev/null 2>&1
 pushd "$($TMPDIRS)" >/dev/null 2>&1
 sudo chroot "${ALPINE_CHROOT}" bash -c '
  #Setup ENV
-  rm -rf  "/build-bins" 2>/dev/null ; mkdir -p "/build-bins" && pushd "$(mktemp -d)" >/dev/null 2>&1
+  rm -rf "/build-bins" 2>/dev/null ; mkdir -p "/build-bins" && pushd "$(mktemp -d)" >/dev/null 2>&1
   #Switch to default: https://github.com/JonathonReinhart/staticx/pull/284
    git clone --filter "blob:none" "https://github.com/JonathonReinhart/staticx" --branch "add-type-checking" && cd "./staticx"
    #https://github.com/JonathonReinhart/staticx/blob/main/build.sh
    pip install -r "./requirements.txt" --break-system-packages --upgrade --force
    apk update && apk upgrade --no-interactive
    apk add busybox scons --latest --upgrade --no-interactive
-   export BOOTLOADER_CC="musl-gcc"
+   export BOOTLOADER_CC="/usr/bin/$(uname -m)-alpine-linux-musl-gcc"
    rm -rf "./build" "./dist" "./scons_build" "./staticx/assets"
    python "./setup.py" sdist bdist_wheel
    find dist/ -name "*.whl" | while read -r file; do 
