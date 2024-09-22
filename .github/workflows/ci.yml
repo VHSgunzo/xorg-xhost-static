@@ -22,7 +22,7 @@ jobs:
             docker run --rm --volume="${{ github.workspace }}:/root:rw" alpine:latest /root/build-alpine.sh
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: xorg-xhost-static-v*.tar.xz
