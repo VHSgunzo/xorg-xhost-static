@@ -26,7 +26,7 @@ sudo apt-get install autoconf automake autopoint binutils bison build-essential 
 sudo apt install python3-pip python3-venv -y -qq 2>/dev/null
 pip install --break-system-packages --upgrade pip || pip install --upgrade pip
 sudo apt install lm-sensors pciutils procps python3-distro python3-netifaces sysfsutils virt-what -y -qq 2>/dev/null
-pip install build ansi2txt cffi pipx scons scuba py2static pytest typer --upgrade --force 2>/dev/null 
+pip install build ansi2txt cffi pipx scons scuba py2static pytest typer --upgrade --force 2>/dev/null
 pip install build ansi2txt cffi pipx scons scuba py2static pytest typer --break-system-packages --upgrade --force 2>/dev/null
 ##-------------------------------------------------------#
 
@@ -107,7 +107,7 @@ ALPINE_DEPS="
   xxd xxhash xz xz-dev xz-libs xz-static \
   yaml yaml-dev yaml-static \
   zig zlib zlib-dev zlib-static zstd zstd-static"
-#https://wiki.alpinelinux.org/wiki/Alpine_Linux_in_a_chroot  
+#https://wiki.alpinelinux.org/wiki/Alpine_Linux_in_a_chroot
 curl -qfsSL "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic//"$(curl -qfsSL "https://gitlab.alpinelinux.org/api/v4/projects/5/repository/tags" | jq -r '.[0].name' | tr -d '[:space:]')"/$(uname -m)/apk.static" -o "./apk.static"
 chmod +x "./apk.static"
 sudo "./apk.static" -X "https://dl-cdn.alpinelinux.org/alpine/edge/main" -U --allow-untrusted -p "${ALPINE_CHROOT}" --initdb add "alpine-base"
@@ -149,9 +149,9 @@ sudo chroot "${ALPINE_CHROOT}" bash -c '
    export BOOTLOADER_CC="/usr/bin/$(uname -m)-alpine-linux-musl-gcc"
    rm -rf "./build" "./dist" "./scons_build" "./staticx/assets"
    python "./setup.py" sdist bdist_wheel
-   find dist/ -name "*.whl" | while read -r file; do 
+   find dist/ -name "*.whl" | while read -r file; do
      newname=$(echo "$file" | sed "s/none-[^/]*\.whl$/none-any.whl/");
-     mv "$file" "$newname"; 
+     mv "$file" "$newname";
    done
    find "dist/" -name "*.whl" | xargs pip install --break-system-packages --upgrade --force
    staticx --version ; popd >/dev/null 2>&1
@@ -159,7 +159,7 @@ sudo chroot "${ALPINE_CHROOT}" bash -c '
    apk update && apk upgrade --no-interactive
    apk add xhost --latest --upgrade --no-interactive
    apk info -d xhost 2>/dev/null | grep -oP "\d+(\.\d+)+" | head -n 1 > "/build-bins/VERSION.txt"
-   staticx --loglevel DEBUG "$(which xhost)" --strip "/build-bins/xhost"
+   staticx --no-compress --loglevel DEBUG "$(which xhost)" --strip "/build-bins/xhost"
 '
 sudo rsync -av --copy-links --exclude="*/" "${ALPINE_CHROOT}/build-bins/." "${ARTIFACTS}"
 PKG_VERSION="$(cat "${ARTIFACTS}/VERSION.txt")" && export PKG_VERSION="${PKG_VERSION}"
@@ -169,7 +169,7 @@ find "${ARTIFACTS}" -type f ! -name '*.txt' -exec bash -c 'mv "$0" "${0}-$(uname
 #Strip
 find "${ARTIFACTS}" -type f -exec strip --strip-debug --strip-dwo --strip-unneeded -R ".comment" -R ".gnu.version" --preserve-dates "{}" \; 2>/dev/null
 #upx
-find "${ARTIFACTS}" -type f | xargs realpath | xargs -I {} upx --best "{}" -f --force-overwrite -o"{}.upx" -qq 2>/dev/null
+# find "${ARTIFACTS}" -type f | xargs realpath | xargs -I {} upx --best "{}" -f --force-overwrite -o"{}.upx" -qq 2>/dev/null
 #End
 popd >/dev/null 2>&1
 ##-------------------------------------------------------#
